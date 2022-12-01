@@ -162,8 +162,7 @@ class MaskedAutoencoderViT(nn.Module):
 
     def amt_masking_throwing(self, x, mask_ratio, throw_ratio, mask_weights):
         """
-        Perform per-sample attention-driven masking.
-        Both masking and throwing use masking weights 
+        Perform per-sample attention-driven masking and throwing.
         x: [N, L, D], sequence
         """
     
@@ -205,7 +204,7 @@ class MaskedAutoencoderViT(nn.Module):
         # add pos embed w/o cls token
         x = x + self.pos_embed[:, 1:, :]
         
-        if epoch >= 40:#the beginning epoch of amt
+        if epoch > 40:#the beginning epoch of amt
             x, mask, ids_restore = self.amt_masking_throwing(x, mask_ratio, throw_ratio, mask_weights)
         else :
             x, mask, ids_restore = self.random_masking(x, mask_ratio=0.75)
@@ -228,7 +227,8 @@ class MaskedAutoencoderViT(nn.Module):
 
     '''for updating masking weights, 
     each image is input w/o crop and 
-    reserve the attention at the last layer'''
+    reserve the attention at the last layer
+    '''
     def forward_encoder_test(self,x):
         # embed patches
         x = self.patch_embed(x)
@@ -262,7 +262,7 @@ class MaskedAutoencoderViT(nn.Module):
         # embed tokens
         x = self.decoder_embed(x)
         
-        if epoch >= 40:#the beginning epoch of amt
+        if epoch > 40:#the beginning epoch of amt
             mask_tokens = self.mask_token.repeat(x.shape[0], int(ids_restore.shape[1] * mask_ratio), 1)
             throw_tokens = self.mask_token.repeat(x.shape[0], ids_restore.shape[1] + 1 - x.shape[1] - int(ids_restore.shape[1] * mask_ratio), 1)
 
@@ -280,7 +280,7 @@ class MaskedAutoencoderViT(nn.Module):
         x = x + self.decoder_pos_embed
 
         #delete thrown tokens, save computing costs
-        if epoch >= 40:
+        if epoch > 40:
             x_d = x[:, 1:, :][(mask_flag+1).bool(), :].reshape(x.shape[0],-1,x.shape[2])
             x = torch.cat([x[:, :1, :], x_d], dim=1)
 
@@ -311,7 +311,7 @@ class MaskedAutoencoderViT(nn.Module):
             target = (target - mean) / (var + 1.e-6)**.5
 
         #delete useless target patches
-        if epoch >= 40:
+        if epoch > 40:
             target = target[(mask_flag+1).bool(), :].reshape(target.shape[0],-1,target.shape[2])
             mask_new = mask_flag[mask_flag != -1].reshape(mask_flag.shape[0],-1)
         else:

@@ -105,3 +105,7 @@ OMP_NUM_THREADS=1 python -m torch.distributed.launch --nproc_per_node=4 main_lin
     --weight_decay 0.0 \
     --dist_eval --data_path ${IMAGENET_DIR}
 ```
+
+This code is written by Zhengqi Liu.
+
+ATTN: This package is free for academic usage. You can run it at your own risk. For other purposes, please contact Jie Gui (guijie@ustc.edu).
